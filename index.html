@@ -727,7 +727,36 @@
                     
                     initGame();
                 } else {
-                    showAuthError("שגיאה: לא נמצא מסמך משתמש בבסיס הנתונים.");
+                    // Self-healing: If user is authenticated in Auth but has no database document, create it!
+                    const defaultName = auth.currentUser.displayName || (auth.currentUser.email ? auth.currentUser.email.split('@')[0] : "שחקן");
+                    const newStudent = {
+                        uid: uid,
+                        name: defaultName,
+                        username: auth.currentUser.email || "student",
+                        coins: 100,
+                        reputation: 10,
+                        level: 1,
+                        completedLevels: [],
+                        score: 150
+                    };
+                    
+                    database.ref("students/" + uid).set(newStudent).then(() => {
+                        gameState.playerDisplayName = newStudent.name;
+                        gameState.username = newStudent.username;
+                        gameState.coins = newStudent.coins;
+                        gameState.reputation = newStudent.reputation;
+                        gameState.currentLevel = newStudent.level;
+                        gameState.completedLevels = newStudent.completedLevels;
+                        
+                        document.getElementById('player-display-name').innerText = gameState.playerDisplayName;
+                        document.getElementById('btn-logout').classList.remove('hidden');
+                        document.getElementById('nickname-modal').classList.add('hidden');
+                        
+                        initGame();
+                    }).catch(writeErr => {
+                        console.error("Self-healing database write failed:", writeErr);
+                        showAuthError("שגיאה: לא נמצא מסמך משתמש בבסיס הנתונים, וניסיון ליצור אותו נכשל (ודאו שכללי האבטחה מוגדרים כראוי).");
+                    });
                 }
             }).catch(err => {
                 console.error("Error loading profile:", err);
