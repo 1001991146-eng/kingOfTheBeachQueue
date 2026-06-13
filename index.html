@@ -725,9 +725,12 @@
                     document.getElementById('nickname-modal').classList.add('hidden');
                     
                     initGame();
+                } else {
+                    showAuthError("שגיאה: לא נמצא מסמך משתמש בבסיס הנתונים.");
                 }
             }).catch(err => {
                 console.error("Error loading profile:", err);
+                showAuthError("שגיאת הרשאות בבסיס הנתונים (Firestore). ודאו שכללי האבטחה (Rules) מוגדרים כראוי.");
             });
         }
 
@@ -877,6 +880,9 @@
                         
                         firestore.collection("students").doc(uid).set(newStudent).then(() => {
                             showNotification(`חשבון ענן נוצר בהצלחה! ברוך הבא ${nameVal}`, "🎉");
+                        }).catch(err => {
+                            console.error("Firestore write error during registration:", err);
+                            showAuthError("ההרשמה הצליחה, אך שמירת פרופיל המשתמש ב-Firestore נכשלה (שגיאת הרשאות).");
                         });
                     })
                     .catch(err => {
