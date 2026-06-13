@@ -787,15 +787,21 @@
             if (tabId === 'login') {
                 emoji.innerText = "🏄‍♂️";
                 title.innerText = "התחברו לחוף ה-Queue";
-                subtitle.innerText = "צברו קוקוסים, התקדמו בשלבים והתחרו מול תלמידי המגמה!";
+                subtitle.innerText = isFirebaseConnected 
+                    ? "צברו קוקוסים, התקדמו בשלבים והתחרו מול תלמידי המגמה!"
+                    : "התחברו לחשבון המקומי השמור במחשב זה.";
             } else if (tabId === 'register') {
                 emoji.innerText = "📝";
                 title.innerText = "הרשמה חדשה למגמה";
-                subtitle.innerText = "צרו חשבון כיתתי מסונכרן כדי לקבל מעקב פדגוגי מהמורה.";
+                subtitle.innerText = isFirebaseConnected
+                    ? "צרו חשבון כיתתי מסונכרן כדי לקבל מעקב פדגוגי מהמורה."
+                    : "צרו חשבון מקומי חדש (הנתונים יישמרו בדפדפן זה).";
             } else {
                 emoji.innerText = "🏖️";
                 title.innerText = "כניסה מיידית כאורח";
-                subtitle.innerText = "התקדמות מקומית זמנית ללא שמירה בענן המורה.";
+                subtitle.innerText = isFirebaseConnected
+                    ? "התקדמות מקומית זמנית ללא שמירה בענן המורה."
+                    : "כניסה מהירה ללא סיסמה. ההתקדמות תישמר בדפדפן.";
             }
             hideAuthError();
         }
