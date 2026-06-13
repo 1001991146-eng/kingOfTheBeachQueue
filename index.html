@@ -623,6 +623,7 @@
         let isFirebaseConnected = false;
         let auth = null;
         let database = null;
+        let isRegistering = false;
 
         // Helpers for 10-level, 4-unit management
         function getLevelUnit(levelNum) {
@@ -687,7 +688,7 @@
                     
                     // Listen to auth changes
                     auth.onAuthStateChanged(user => {
-                        if (user) {
+                        if (user && !isRegistering) {
                             // Fetch user's profile and progress
                             loadFirebaseUserProgress(user.uid);
                         }
@@ -870,6 +871,7 @@
 
             if (isFirebaseConnected) {
                 const email = userVal;
+                isRegistering = true;
                 auth.createUserWithEmailAndPassword(email, passVal)
                     .then(userCredential => {
                         const uid = userCredential.user.uid;
@@ -885,15 +887,19 @@
                         };
                         
                         database.ref("students/" + uid).set(newStudent).then(() => {
+                            isRegistering = false;
                             showNotification(`חשבון ענן נוצר בהצלחה! ברוך הבא ${nameVal}`, "🎉");
+                            loadFirebaseUserProgress(uid);
                         }).catch(err => {
+                            isRegistering = false;
                             console.error("Database write error during registration:", err);
                             showAuthError("ההרשמה הצליחה, אך שמירת פרופיל המשתמש בבסיס הנתונים נכשלה.");
                         });
                     })
                     .catch(err => {
+                        isRegistering = false;
                         console.error(err);
-                        let errMsg = "שגיאה ברישום לפיירבייס.";
+                        let errMsg = "שגיאה ברישום לפייבייס.";
                         if (err.code === "auth/email-already-in-use") {
                             errMsg = "כתובת דוא\"ל זו כבר נמצאת בשימוש!";
                         } else if (err.code === "auth/invalid-email") {

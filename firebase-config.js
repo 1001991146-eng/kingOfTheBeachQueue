@@ -3,7 +3,7 @@
 const firebaseConfig = {
   apiKey: "AIzaSyCEwlTp4Yo2boARCieNTITIT0MkMNZiOv0",
   authDomain: "king-of-the-beach-queue.firebaseapp.com",
-  databaseURL: "https://king-of-the-beach-queue-default-rtdb.firebaseio.com/", // Realtime Database URL (Update if different region)
+  databaseURL: "https://king-of-the-beach-queue-default-rtdb.asia-southeast1.firebasedatabase.app", // Realtime Database URL (Update if different region)
   projectId: "king-of-the-beach-queue",
   storageBucket: "king-of-the-beach-queue.firebasestorage.app",
   messagingSenderId: "611422584946",
