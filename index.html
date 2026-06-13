@@ -12,7 +12,7 @@
     <!-- Firebase SDK (Compat Version for ease of use in static script tags) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <style>
         body {
@@ -622,7 +622,7 @@
 
         let isFirebaseConnected = false;
         let auth = null;
-        let firestore = null;
+        let database = null;
 
         // Helpers for 10-level, 4-unit management
         function getLevelUnit(levelNum) {
@@ -679,7 +679,7 @@
                 try {
                     firebase.initializeApp(config);
                     auth = firebase.auth();
-                    firestore = firebase.firestore();
+                    database = firebase.database();
                     isFirebaseConnected = true;
                     
                     badge.innerHTML = `<span class="w-2.5 h-2.5 bg-emerald-500 rounded-full inline-block animate-pulse"></span> מחובר לענן המגמה ☁️`;
@@ -710,9 +710,9 @@
 
         // Firebase Progress Loader
         function loadFirebaseUserProgress(uid) {
-            firestore.collection("students").doc(uid).get().then(doc => {
-                if (doc.exists) {
-                    const data = doc.data();
+            database.ref("students/" + uid).get().then(snapshot => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
                     gameState.playerDisplayName = data.name || data.username || 'שחקן';
                     gameState.username = data.username || 'student';
                     gameState.coins = data.coins || 100;
@@ -730,7 +730,7 @@
                 }
             }).catch(err => {
                 console.error("Error loading profile:", err);
-                showAuthError("שגיאת הרשאות בבסיס הנתונים (Firestore). ודאו שכללי האבטחה (Rules) מוגדרים כראוי.");
+                showAuthError("שגיאת הרשאות בבסיס הנתונים (Realtime Database). ודאו שכללי האבטחה (Rules) מוגדרים כראוי.");
             });
         }
 
@@ -884,11 +884,11 @@
                             score: 150
                         };
                         
-                        firestore.collection("students").doc(uid).set(newStudent).then(() => {
+                        database.ref("students/" + uid).set(newStudent).then(() => {
                             showNotification(`חשבון ענן נוצר בהצלחה! ברוך הבא ${nameVal}`, "🎉");
                         }).catch(err => {
-                            console.error("Firestore write error during registration:", err);
-                            showAuthError("ההרשמה הצליחה, אך שמירת פרופיל המשתמש ב-Firestore נכשלה (שגיאת הרשאות).");
+                            console.error("Database write error during registration:", err);
+                            showAuthError("ההרשמה הצליחה, אך שמירת פרופיל המשתמש בבסיס הנתונים נכשלה.");
                         });
                     })
                     .catch(err => {
@@ -984,8 +984,8 @@
             };
 
             if (isFirebaseConnected && auth.currentUser) {
-                firestore.collection("students").doc(auth.currentUser.uid).set(pData, { merge: true })
-                    .catch(err => console.error("Firestore save error:", err));
+                database.ref("students/" + auth.currentUser.uid).update(pData)
+                    .catch(err => console.error("Database save error:", err));
             } else {
                 let db = JSON.parse(localStorage.getItem('registered_students') || '[]');
                 let userObj = db.find(u => u.username === gameState.username);
@@ -1469,12 +1469,16 @@
             container.innerHTML = '';
 
             if (isFirebaseConnected) {
-                firestore.collection("students").get().then(snap => {
+                database.ref("students").get().then(snapshot => {
                     let students = [];
-                    snap.forEach(doc => students.push(doc.data()));
+                    if (snapshot.exists()) {
+                        snapshot.forEach(childSnap => {
+                            students.push(childSnap.val());
+                        });
+                    }
                     renderLeaderboardUI(students);
                 }).catch(err => {
-                    console.error("Firestore leaderboard error:", err);
+                    console.error("Database leaderboard error:", err);
                     renderLeaderboardLocal();
                 });
             } else {
@@ -1549,12 +1553,16 @@
         // Classroom Progress Data Loader
         function loadClassroomData() {
             if (isFirebaseConnected) {
-                firestore.collection("students").get().then(snap => {
+                database.ref("students").get().then(snapshot => {
                     let students = [];
-                    snap.forEach(doc => students.push(doc.data()));
+                    if (snapshot.exists()) {
+                        snapshot.forEach(childSnap => {
+                            students.push(childSnap.val());
+                        });
+                    }
                     renderTeacherDashboardUI(students);
                 }).catch(err => {
-                    console.error("Firestore dashboard error:", err);
+                    console.error("Database dashboard error:", err);
                     renderTeacherDashboardLocal();
                 });
             } else {
